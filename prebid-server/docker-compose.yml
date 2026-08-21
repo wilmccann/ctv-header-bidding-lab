@@ -1,0 +1,11 @@
+services:
+  prebid-server:
+    image: prebid/prebid-server:v4.8.0
+    platform: linux/amd64   # image has no arm64 build; runs under Rosetta emulation on Apple Silicon
+    container_name: ortb-vast-prebid-server
+    ports:
+      - "8000:8000"   # /openrtb2/auction
+      - "6060:6060"   # admin/status
+    volumes:
+      - ./pbs.yaml:/etc/config/pbs.yaml:ro
+      - ./stored_requests:/usr/local/bin/stored_requests:ro

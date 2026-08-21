@@ -2,7 +2,9 @@
   "id": "fx-req-0001a2b3c4d5",
   "at": 1,
   "tmax": 1200,
-  "cur": ["USD"],
+  "cur": [
+    "USD"
+  ],
   "imp": [
     {
       "id": "1",
@@ -22,10 +24,17 @@
         ]
       },
       "video": {
-        "mimes": ["video/mp4"],
+        "mimes": [
+          "video/mp4"
+        ],
         "minduration": 6,
         "maxduration": 35,
-        "protocols": [7, 8, 15, 16],
+        "protocols": [
+          7,
+          8,
+          15,
+          16
+        ],
         "w": 1920,
         "h": 1080,
         "startdelay": -1,
@@ -33,13 +42,30 @@
         "plcmt": 1,
         "linearity": 1,
         "skip": 0,
-        "playbackmethod": [1, 3, 4, 5],
+        "playbackmethod": [
+          1,
+          3,
+          4,
+          5
+        ],
         "maxbitrate": 50000,
         "boxingallowed": 1,
         "maxextended": 0,
         "api": [],
         "ext": {
           "slotId": "flex-slot-0001"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp1"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     },
@@ -61,10 +87,17 @@
         ]
       },
       "video": {
-        "mimes": ["video/mp4"],
+        "mimes": [
+          "video/mp4"
+        ],
         "minduration": 6,
         "maxduration": 35,
-        "protocols": [7, 8, 15, 16],
+        "protocols": [
+          7,
+          8,
+          15,
+          16
+        ],
         "w": 1920,
         "h": 1080,
         "startdelay": -1,
@@ -72,13 +105,30 @@
         "plcmt": 1,
         "linearity": 1,
         "skip": 0,
-        "playbackmethod": [1, 3, 4, 5],
+        "playbackmethod": [
+          1,
+          3,
+          4,
+          5
+        ],
         "maxbitrate": 50000,
         "boxingallowed": 1,
         "maxextended": 0,
         "api": [],
         "ext": {
           "slotId": "flex-slot-0002"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp2"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     },
@@ -100,10 +150,17 @@
         ]
       },
       "video": {
-        "mimes": ["video/mp4"],
+        "mimes": [
+          "video/mp4"
+        ],
         "minduration": 6,
         "maxduration": 35,
-        "protocols": [7, 8, 15, 16],
+        "protocols": [
+          7,
+          8,
+          15,
+          16
+        ],
         "w": 1920,
         "h": 1080,
         "startdelay": -1,
@@ -111,13 +168,30 @@
         "plcmt": 1,
         "linearity": 1,
         "skip": 0,
-        "playbackmethod": [1, 3, 4, 5],
+        "playbackmethod": [
+          1,
+          3,
+          4,
+          5
+        ],
         "maxbitrate": 50000,
         "boxingallowed": 1,
         "maxextended": 0,
         "api": [],
         "ext": {
           "slotId": "flex-slot-0003"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp3"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     },
@@ -139,10 +213,17 @@
         ]
       },
       "video": {
-        "mimes": ["video/mp4"],
+        "mimes": [
+          "video/mp4"
+        ],
         "minduration": 6,
         "maxduration": 35,
-        "protocols": [7, 8, 15, 16],
+        "protocols": [
+          7,
+          8,
+          15,
+          16
+        ],
         "w": 1920,
         "h": 1080,
         "startdelay": -1,
@@ -150,13 +231,30 @@
         "plcmt": 1,
         "linearity": 1,
         "skip": 0,
-        "playbackmethod": [1, 3, 4, 5],
+        "playbackmethod": [
+          1,
+          3,
+          4,
+          5
+        ],
         "maxbitrate": 50000,
         "boxingallowed": 1,
         "maxextended": 0,
         "api": [],
         "ext": {
           "slotId": "flex-slot-0004"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp4"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     },
@@ -178,10 +276,17 @@
         ]
       },
       "video": {
-        "mimes": ["video/mp4"],
+        "mimes": [
+          "video/mp4"
+        ],
         "minduration": 6,
         "maxduration": 35,
-        "protocols": [7, 8, 15, 16],
+        "protocols": [
+          7,
+          8,
+          15,
+          16
+        ],
         "w": 1920,
         "h": 1080,
         "startdelay": -1,
@@ -189,13 +294,30 @@
         "plcmt": 1,
         "linearity": 1,
         "skip": 0,
-        "playbackmethod": [1, 3, 4, 5],
+        "playbackmethod": [
+          1,
+          3,
+          4,
+          5
+        ],
         "maxbitrate": 50000,
         "boxingallowed": 1,
         "maxextended": 0,
         "api": [],
         "ext": {
           "slotId": "flex-slot-0005"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp5"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     },
@@ -217,10 +339,17 @@
         ]
       },
       "video": {
-        "mimes": ["video/mp4"],
+        "mimes": [
+          "video/mp4"
+        ],
         "minduration": 6,
         "maxduration": 35,
-        "protocols": [7, 8, 15, 16],
+        "protocols": [
+          7,
+          8,
+          15,
+          16
+        ],
         "w": 1920,
         "h": 1080,
         "startdelay": -1,
@@ -228,13 +357,30 @@
         "plcmt": 1,
         "linearity": 1,
         "skip": 0,
-        "playbackmethod": [1, 3, 4, 5],
+        "playbackmethod": [
+          1,
+          3,
+          4,
+          5
+        ],
         "maxbitrate": 50000,
         "boxingallowed": 1,
         "maxextended": 0,
         "api": [],
         "ext": {
           "slotId": "flex-slot-0006"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp6"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     }
@@ -246,13 +392,17 @@
     "domain": "streamvault.example",
     "storeurl": "https://channelstore.roku.com/details/example-streamvault-app",
     "privacypolicy": 1,
-    "cat": ["IAB1"],
+    "cat": [
+      "IAB1"
+    ],
     "publisher": {
       "id": "flex-pub-001",
       "domain": "streamvault.example"
     },
     "content": {
-      "cat": ["IAB1"],
+      "cat": [
+        "IAB1"
+      ],
       "genre": "genre_sci_fi,genre_adventure",
       "language": "en",
       "len": 1458,
@@ -295,8 +445,10 @@
   },
   "regs": {
     "coppa": 0,
-    "gpp": "DBABLA~1YNN",
-    "gpp_sid": [6]
+    "gpp": "DBABTA~1YNN",
+    "gpp_sid": [
+      6
+    ]
   },
   "bcat": [
     "IAB11-4",
@@ -308,10 +460,10 @@
     "IAB6-1"
   ],
   "badv": [
-     "justcbdstores.com",
-     "estrellatv.com",
-     "mysoulcbd.com",
-     "lionsden.com",
-     "newsmaxtv.com"
+    "justcbdstores.com",
+    "estrellatv.com",
+    "mysoulcbd.com",
+    "lionsden.com",
+    "newsmaxtv.com"
   ]
 }

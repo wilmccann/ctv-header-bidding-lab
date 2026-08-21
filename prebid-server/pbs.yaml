@@ -1,0 +1,17 @@
+port: 8000
+admin_port: 6060
+
+account_required: false
+
+gdpr:
+  default_value: "0"
+
+stored_requests:
+  filesystem:
+    enabled: true
+    directorypath: ./stored_requests/data/by_id
+
+stored_responses:
+  filesystem:
+    enabled: true
+    directorypath: ./stored_requests/data/by_id
