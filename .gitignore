@@ -1,2 +1,4 @@
-docs/
+docs/*
+!docs/vast_4.2.xsd
 .DS_Store
+.idea/
