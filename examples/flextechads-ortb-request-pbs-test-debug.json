@@ -55,6 +55,18 @@
         "ext": {
           "slotId": "flex-slot-0001"
         }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp1"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
+        }
       }
     },
     {
@@ -106,6 +118,18 @@
         "ext": {
           "slotId": "flex-slot-0002"
         }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp2"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
+        }
       }
     },
     {
@@ -156,6 +180,18 @@
         "api": [],
         "ext": {
           "slotId": "flex-slot-0003"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "flex-resp-imp3"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
+          }
         }
       }
     }
@@ -220,7 +256,7 @@
   },
   "regs": {
     "coppa": 0,
-    "gpp": "DBABLA~1YNN",
+    "gpp": "DBABTA~1YNN",
     "gpp_sid": [
       6
     ]
@@ -240,5 +276,11 @@
     "mysoulcbd.com",
     "lionsden.com",
     "newsmaxtv.com"
-  ]
+  ],
+  "test": 1,
+  "ext": {
+    "prebid": {
+      "debug": true
+    }
+  }
 }

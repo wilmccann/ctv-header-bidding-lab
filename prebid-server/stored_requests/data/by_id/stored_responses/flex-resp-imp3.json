@@ -5,12 +5,11 @@
       {
         "id": "flex-bid-imp3",
         "impid": "3",
-        "price": 10.0,
-        "adid": "flex-creative-deal",
-        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"flex-ad-deal-003\"><InLine><AdSystem version=\"1.0\">FlexTechAds Mock PBS</AdSystem><AdTitle>FlexTechAds Deal Win - StreamVault Mid-Roll</AdTitle><Impression id=\"imp\"><![CDATA[https://track.flextechads.example/imp?price=${AUCTION_PRICE}]]></Impression><Creatives><Creative id=\"flex-creative-deal-001\" sequence=\"1\"><Linear><Duration>00:00:15</Duration><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.flextechads.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.flextechads.example/complete]]></Tracking></TrackingEvents><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"4000\"><![CDATA[https://cdn.flextechads.example/creative/deal-win-1080p.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
-        "cid": "flex-campaign-deal",
-        "crid": "flex-creative-deal-001",
-        "dealid": "FLEXTECHADS-PMP-DEAL-001",
+        "price": 12.5,
+        "adid": "flex-creative-open",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"flex-ad-open-003\"><InLine><AdSystem version=\"1.0\">FlexTechAds Mock PBS</AdSystem><AdTitle>FlexTechAds Open Auction Win - StreamVault Mid-Roll</AdTitle><Impression id=\"imp\"><![CDATA[https://track.flextechads.example/imp?price=${AUCTION_PRICE}]]></Impression><Creatives><Creative id=\"flex-creative-open-001\" sequence=\"1\"><Linear><Duration>00:00:15</Duration><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.flextechads.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.flextechads.example/complete]]></Tracking></TrackingEvents><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"4000\"><![CDATA[https://cdn.flextechads.example/creative/open-win-1080p.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "flex-campaign-open",
+        "crid": "flex-creative-open-001",
         "w": 1920,
         "h": 1080,
         "cat": [

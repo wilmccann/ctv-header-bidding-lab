@@ -10,7 +10,7 @@ against a real auction/response pipeline without needing a live bidder.
 
 - **`flextechads-ortb-request.json`** — a spec-shaped OpenRTB 2.5/2.6 `BidRequest`
   for a mock exchange ("FlexTechAds"). Represents a Roku CTV app requesting a
-  6-slot in-stream video ad pod (linear, 6-35s, 1080p, VAST 4.0/4.3), each
+  3-slot in-stream video ad pod (linear, 6-35s, 1080p, VAST 4.0/4.3), each
   impression contestable by both a private marketplace (PMP) deal and the open
   auction floor. Uses GPP (`regs.gpp` / `regs.gpp_sid`) for privacy signaling.
 - **`flextechads-ortb-request-pbs-test.json`** — the same request, with each
@@ -39,8 +39,8 @@ prebid-server/
   pbs.yaml              # server config: filesystem-backed stored requests/responses
   start.sh / stop.sh     # bring the stack up/down
   stored_requests/data/by_id/stored_responses/
-    flex-resp-imp1.json..3.json   # canned PMP deal win ($10 CPM, dealid set)
-    flex-resp-imp4.json..6.json   # canned open-auction win ($12.50 CPM)
+    flex-resp-imp1.json..2.json   # canned PMP deal win ($10 CPM, dealid set)
+    flex-resp-imp3.json           # canned open-auction win ($12.50 CPM)
 ```
 
 ## Running the Prebid Server harness
@@ -60,9 +60,19 @@ curl -s -X POST http://localhost:8000/openrtb2/auction \
   --data-binary @examples/flextechads-ortb-request-pbs-test.json | python3 -m json.tool
 ```
 
-You should get back a `BidResponse` with 6 bids: 3 carrying `dealid:
-FLEXTECHADS-PMP-DEAL-001` at $10 CPM, 3 without a deal at $12.50 CPM, each
+You should get back a `BidResponse` with 3 bids: 2 carrying `dealid:
+FLEXTECHADS-PMP-DEAL-001` at $10 CPM, 1 without a deal at $12.50 CPM, each
 with a VAST `adm`.
+
+To see the auction's debug trace (`ext.debug.resolvedrequest`, per-imp
+timing, floor/GPP warnings) instead of just the final bids, send the debug
+variant:
+
+```bash
+curl -s -X POST http://localhost:8000/openrtb2/auction \
+  -H "Content-Type: application/json" \
+  --data-binary @examples/flextechads-ortb-request-pbs-test-debug.json | python3 -m json.tool
+```
 
 ```bash
 ./stop.sh     # docker compose down
