@@ -1,0 +1,11 @@
+# One IP (or CIDR-less address) per line, loaded into the Bouncer module's
+# Bloom filter at startup. Lines starting with # are comments.
+#
+# These are RFC 5737 documentation-range addresses (TEST-NET-1/2/3) chosen
+# specifically so this file is safe to commit and never matches real
+# traffic by accident — swap in real threat-intel feed output for anything
+# beyond local testing.
+192.0.2.66
+192.0.2.77
+198.51.100.23
+203.0.113.99

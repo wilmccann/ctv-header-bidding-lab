@@ -1,0 +1,66 @@
+# Debug variant of ./Dockerfile: identical build, except the Go compiler
+# keeps optimizations/inlining OFF (required for reliable breakpoints) and
+# Delve is installed and used to launch the server instead of running the
+# binary directly. Not used by the normal ./start.sh flow — see
+# docker-compose.debug.yml and README-build.md's "Debugging the compiled
+# hooks" section for how this gets built and attached to.
+#
+# Same PBS_VERSION/import-path caveat as ./Dockerfile applies here (see that
+# file's header comment) — this is purely an added debug capability, not a
+# different build of PBS itself.
+
+FROM golang:1.25-bookworm AS build
+
+ARG PBS_VERSION=v4.8.0
+
+WORKDIR /src
+RUN git clone --depth 1 --branch ${PBS_VERSION} \
+      https://github.com/prebid/prebid-server.git .
+
+# Vendor the custom hooks into the module tree PBS's own codegen scans.
+COPY modules/ortbvast ./modules/ortbvast
+
+# Regenerate modules/builder.go, then build with -gcflags="all=-N -l" (-N
+# disables optimizations, -l disables inlining) — without this, Delve's
+# breakpoints on small functions like HandleEntrypointHook/HandleRawAuctionHook
+# can silently fail to bind or land on the wrong line, since the compiler is
+# free to inline/reorder them. Also builds Delve itself from the same Go
+# toolchain, so its DWARF-reading matches what the compiler emitted.
+RUN go generate ./modules/... \
+ && CGO_ENABLED=0 go build -gcflags="all=-N -l" -o /out/prebid-server . \
+ && CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest \
+ && cp "$(go env GOPATH)/bin/dlv" /out/dlv
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/local/bin
+COPY --from=build /out/prebid-server /usr/local/bin/prebid-server
+COPY --from=build /out/dlv /usr/local/bin/dlv
+COPY --from=build /src/static /usr/local/bin/static
+
+EXPOSE 8000 6060 2345
+
+# Launch prebid-server under Delve in headless mode instead of running it
+# directly. Flags, in order:
+#   --headless           run as a server, no local terminal UI
+#   --listen=:2345        Delve's own debug port (see docker-compose.debug.yml)
+#   --api-version=2       required for editor clients (VS Code, GoLand, ...)
+#   --accept-multiclient  don't exit after the first debugger disconnects, so
+#                          you can attach/detach from VS Code repeatedly
+#                          without restarting the whole stack
+#   --continue             start prebid-server running immediately rather
+#                          than waiting for a debugger to attach first — the
+#                          container is a normal, usable PBS instance on
+#                          :8000 whether or not anything is attached on :2345
+#   --log                 enable Delve's internal logging (visible via
+#                          `docker logs`, since editor-side showLog/logOutput
+#                          settings only apply to a locally-spawned dlv, not
+#                          this remote headless one)
+#   --log-output=rpc,debugger  log incoming JSON-RPC calls (CreateBreakpoint,
+#                          etc.) and general debugger activity
+ENTRYPOINT ["/usr/local/bin/dlv", "exec", "/usr/local/bin/prebid-server", \
+            "--headless", "--listen=:2345", "--api-version=2", \
+            "--accept-multiclient", "--continue", \
+            "--log", "--log-output=rpc,debugger"]

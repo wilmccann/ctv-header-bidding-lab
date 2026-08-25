@@ -1,0 +1,17 @@
+# The prebid-server image's build context is now the repo root (see
+# prebid-server/docker-compose.yml) so that modules/ortbvast/ is reachable.
+# The Dockerfile only ever COPYs modules/ortbvast/ — everything else here is
+# excluded purely to keep the context upload small and builds fast.
+
+.git
+.venv
+.idea
+docs
+tests
+examples
+scripts
+prebid-server/stored_requests
+prebid-server/cache-config
+__pycache__
+*.pyc
+.DS_Store

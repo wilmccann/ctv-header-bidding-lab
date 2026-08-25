@@ -1,0 +1,56 @@
+[
+  {
+    "seat": "house-dsp",
+    "bid": [
+      {
+        "id": "house-bid-circuit-imp2",
+        "impid": "2",
+        "price": 6.75,
+        "adid": "house-creative-circuit-open2",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"house-ad-circuit-open-002\"><InLine><AdSystem version=\"1.0\">House DSP Mock</AdSystem><Impression id=\"imp\"><![CDATA[https://track.house-dsp.example/imp?price=${AUCTION_PRICE}]]></Impression><AdServingId>house-ad-serving-circuit-002</AdServingId><AdTitle>House DSP Open Auction Bid - OrbitWatch Pre-Roll</AdTitle><Creatives><Creative id=\"house-creative-circuit-open-002\" sequence=\"1\"><Linear><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.house-dsp.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.house-dsp.example/complete]]></Tracking></TrackingEvents><Duration>00:00:15</Duration><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"4200\"><![CDATA[https://cdn.house-dsp.example/creative/circuit-open-2-1080p.mp4]]></MediaFile></MediaFiles></Linear><UniversalAdId idRegistry=\"house-dsp.example\">house-creative-circuit-open-002</UniversalAdId></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "house-campaign-circuit-open2",
+        "crid": "house-creative-circuit-open-002",
+        "w": 1920,
+        "h": 1080,
+        "cat": ["IAB1"],
+        "mtype": 2
+      }
+    ]
+  },
+  {
+    "seat": "nova-dsp",
+    "bid": [
+      {
+        "id": "nova-bid-circuit-imp2",
+        "impid": "2",
+        "price": 5.9,
+        "adid": "nova-creative-circuit-open2",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"nova-ad-circuit-open-002\"><InLine><AdSystem version=\"1.0\">Nova DSP Mock</AdSystem><Impression id=\"imp\"><![CDATA[https://track.nova-dsp.example/imp?price=${AUCTION_PRICE}]]></Impression><AdServingId>nova-ad-serving-circuit-002</AdServingId><AdTitle>Nova DSP Open Auction Bid - OrbitWatch Pre-Roll</AdTitle><Creatives><Creative id=\"nova-creative-circuit-open-002\" sequence=\"1\"><Linear><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.nova-dsp.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.nova-dsp.example/complete]]></Tracking></TrackingEvents><Duration>00:00:15</Duration><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"4000\"><![CDATA[https://cdn.nova-dsp.example/creative/circuit-open-2-1080p.mp4]]></MediaFile></MediaFiles></Linear><UniversalAdId idRegistry=\"nova-dsp.example\">nova-creative-circuit-open-002</UniversalAdId></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "nova-campaign-circuit-open2",
+        "crid": "nova-creative-circuit-open-002",
+        "w": 1920,
+        "h": 1080,
+        "cat": ["IAB1"],
+        "mtype": 2
+      }
+    ]
+  },
+  {
+    "seat": "orbit-dsp",
+    "bid": [
+      {
+        "id": "orbit-bid-circuit-imp2",
+        "impid": "2",
+        "price": 7.1,
+        "adid": "orbit-creative-circuit-open2",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"orbit-ad-circuit-open-002\"><InLine><AdSystem version=\"1.0\">Orbit DSP Mock</AdSystem><Impression id=\"imp\"><![CDATA[https://track.orbit-dsp.example/imp?price=${AUCTION_PRICE}]]></Impression><AdServingId>orbit-ad-serving-circuit-002</AdServingId><AdTitle>Orbit DSP Open Auction Win - OrbitWatch Pre-Roll</AdTitle><Creatives><Creative id=\"orbit-creative-circuit-open-002\" sequence=\"1\"><Linear><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.orbit-dsp.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.orbit-dsp.example/complete]]></Tracking></TrackingEvents><Duration>00:00:15</Duration><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"3800\"><![CDATA[https://cdn.orbit-dsp.example/creative/circuit-open-2-1080p.mp4]]></MediaFile></MediaFiles></Linear><UniversalAdId idRegistry=\"orbit-dsp.example\">orbit-creative-circuit-open-002</UniversalAdId></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "orbit-campaign-circuit-open2",
+        "crid": "orbit-creative-circuit-open-002",
+        "w": 1920,
+        "h": 1080,
+        "cat": ["IAB1"],
+        "mtype": 2
+      }
+    ]
+  }
+]

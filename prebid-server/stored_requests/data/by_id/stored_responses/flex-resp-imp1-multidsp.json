@@ -1,0 +1,57 @@
+[
+  {
+    "seat": "house-dsp",
+    "bid": [
+      {
+        "id": "house-bid-imp1",
+        "impid": "1",
+        "price": 11.0,
+        "adid": "house-creative-open",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"house-ad-open-001\"><InLine><AdSystem version=\"1.0\">House DSP Mock</AdSystem><Impression id=\"imp\"><![CDATA[https://track.house-dsp.example/imp?price=${AUCTION_PRICE}]]></Impression><AdServingId>house-ad-serving-001</AdServingId><AdTitle>House DSP Open Auction Win - StreamVault Mid-Roll</AdTitle><Creatives><Creative id=\"house-creative-open-001\" sequence=\"1\"><Linear><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.house-dsp.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.house-dsp.example/complete]]></Tracking></TrackingEvents><Duration>00:00:15</Duration><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"4200\"><![CDATA[https://cdn.house-dsp.example/creative/open-win-1080p.mp4]]></MediaFile></MediaFiles></Linear><UniversalAdId idRegistry=\"house-dsp.example\">house-creative-open-001</UniversalAdId></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "house-campaign-open",
+        "crid": "house-creative-open-001",
+        "w": 1920,
+        "h": 1080,
+        "cat": ["IAB1"],
+        "mtype": 2
+      }
+    ]
+  },
+  {
+    "seat": "nova-dsp",
+    "bid": [
+      {
+        "id": "nova-bid-imp1",
+        "impid": "1",
+        "price": 10.0,
+        "adid": "nova-creative-deal",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"nova-ad-deal-001\"><InLine><AdSystem version=\"1.0\">Nova DSP Mock</AdSystem><Impression id=\"imp\"><![CDATA[https://track.nova-dsp.example/imp?price=${AUCTION_PRICE}]]></Impression><AdServingId>nova-ad-serving-001</AdServingId><AdTitle>Nova DSP Deal Win - StreamVault Mid-Roll</AdTitle><Creatives><Creative id=\"nova-creative-deal-001\" sequence=\"1\"><Linear><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.nova-dsp.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.nova-dsp.example/complete]]></Tracking></TrackingEvents><Duration>00:00:15</Duration><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"4000\"><![CDATA[https://cdn.nova-dsp.example/creative/deal-win-1080p.mp4]]></MediaFile></MediaFiles></Linear><UniversalAdId idRegistry=\"nova-dsp.example\">nova-creative-deal-001</UniversalAdId></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "nova-campaign-deal",
+        "crid": "nova-creative-deal-001",
+        "dealid": "FLEXTECHADS-PMP-DEAL-001",
+        "w": 1920,
+        "h": 1080,
+        "cat": ["IAB1"],
+        "mtype": 2
+      }
+    ]
+  },
+  {
+    "seat": "orbit-dsp",
+    "bid": [
+      {
+        "id": "orbit-bid-imp1",
+        "impid": "1",
+        "price": 9.25,
+        "adid": "orbit-creative-open",
+        "adm": "<VAST version=\"4.2\" xmlns=\"http://www.iab.com/VAST\"><Ad id=\"orbit-ad-open-001\"><InLine><AdSystem version=\"1.0\">Orbit DSP Mock</AdSystem><Impression id=\"imp\"><![CDATA[https://track.orbit-dsp.example/imp?price=${AUCTION_PRICE}]]></Impression><AdServingId>orbit-ad-serving-001</AdServingId><AdTitle>Orbit DSP Open Auction Bid - StreamVault Mid-Roll</AdTitle><Creatives><Creative id=\"orbit-creative-open-001\" sequence=\"1\"><Linear><TrackingEvents><Tracking event=\"start\"><![CDATA[https://track.orbit-dsp.example/start]]></Tracking><Tracking event=\"complete\"><![CDATA[https://track.orbit-dsp.example/complete]]></Tracking></TrackingEvents><Duration>00:00:15</Duration><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"1920\" height=\"1080\" bitrate=\"3800\"><![CDATA[https://cdn.orbit-dsp.example/creative/open-bid-1080p.mp4]]></MediaFile></MediaFiles></Linear><UniversalAdId idRegistry=\"orbit-dsp.example\">orbit-creative-open-001</UniversalAdId></Creative></Creatives></InLine></Ad></VAST>",
+        "cid": "orbit-campaign-open",
+        "crid": "orbit-creative-open-001",
+        "w": 1920,
+        "h": 1080,
+        "cat": ["IAB1"],
+        "mtype": 2
+      }
+    ]
+  }
+]

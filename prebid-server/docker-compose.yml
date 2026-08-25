@@ -1,7 +1,17 @@
 services:
   prebid-server:
-    image: prebid/prebid-server:v4.8.0
-    platform: linux/amd64   # image has no arm64 build; runs under Rosetta emulation on Apple Silicon
+    build:
+      # Context is the repo root, not this directory: the Dockerfile's
+      # `COPY modules/ortbvast ./modules/ortbvast` step needs modules/ortbvast/
+      # (a sibling of prebid-server/, one level up) to be inside the build
+      # context. context: ".." plus a dockerfile path relative to that
+      # context is how Compose points at a Dockerfile that isn't at the
+      # context root.
+      context: ..
+      dockerfile: prebid-server/Dockerfile
+      args:
+        PBS_VERSION: v4.8.0
+    platform: linux/amd64   # PBS has no arm64 build; runs under Rosetta emulation on Apple Silicon
     container_name: ortb-vast-prebid-server
     ports:
       - "8000:8000"   # /openrtb2/auction
@@ -9,3 +19,19 @@ services:
     volumes:
       - ./pbs.yaml:/etc/config/pbs.yaml:ro
       - ./stored_requests:/usr/local/bin/stored_requests:ro
+      - ./cache-config/bouncer-blocklist.txt:/etc/config/bouncer-blocklist.txt:ro
+      - ./cache-config/enricher-profiles.json:/etc/config/enricher-profiles.json:ro
+    depends_on:
+      prebid-cache:
+        condition: service_started
+
+  prebid-cache:
+    image: prebid/prebid-cache:v0.30.0
+    platform: linux/amd64
+    container_name: ortb-vast-prebid-cache
+    ports:
+      - "2424:2424"   # POST/GET /cache
+      - "2525:2525"   # admin
+    # No custom config.yaml mounted: prebid-cache defaults to an in-memory
+    # backend, which is exactly what a local test harness wants — nothing
+    # to stand up, nothing that persists between ./stop.sh runs.

@@ -1,0 +1,172 @@
+{
+  "id": "ctv-req-0001a2b3c4d5",
+  "at": 1,
+  "tmax": 1200,
+  "cur": ["USD"],
+  "ext": {
+    "prebid": {
+      "targeting": {},
+      "cache": {
+        "vastxml": {}
+      }
+    }
+  },
+  "imp": [
+    {
+      "id": "1",
+      "secure": 1,
+      "instl": 1,
+      "bidfloor": 7,
+      "bidfloorcur": "USD",
+      "pmp": {
+        "private_auction": 0,
+        "deals": [
+          {
+            "id": "CIRCUITTV-PMP-DEAL-001",
+            "at": 1,
+            "bidfloor": 7,
+            "bidfloorcur": "USD"
+          }
+        ]
+      },
+      "video": {
+        "mimes": ["video/mp4"],
+        "minduration": 6,
+        "maxduration": 30,
+        "protocols": [7, 8, 15, 16],
+        "w": 3840,
+        "h": 2160,
+        "startdelay": -1,
+        "placement": 1,
+        "plcmt": 1,
+        "linearity": 1,
+        "skip": 0,
+        "playbackmethod": [1, 3],
+        "maxbitrate": 60000,
+        "boxingallowed": 1,
+        "maxextended": 0,
+        "api": [],
+        "ext": {
+          "slotId": "circuit-slot-0001"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "circuit-resp-imp1"
+          }
+        }
+      }
+    },
+    {
+      "id": "2",
+      "secure": 1,
+      "instl": 1,
+      "bidfloor": 5,
+      "bidfloorcur": "USD",
+      "video": {
+        "mimes": ["video/mp4"],
+        "minduration": 6,
+        "maxduration": 30,
+        "protocols": [7, 8, 15, 16],
+        "w": 3840,
+        "h": 2160,
+        "startdelay": 0,
+        "placement": 1,
+        "plcmt": 1,
+        "linearity": 1,
+        "skip": 0,
+        "playbackmethod": [1, 3],
+        "maxbitrate": 60000,
+        "boxingallowed": 1,
+        "maxextended": 0,
+        "api": [],
+        "ext": {
+          "slotId": "circuit-slot-0002"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "storedauctionresponse": {
+            "id": "circuit-resp-imp2"
+          }
+        }
+      }
+    }
+  ],
+  "app": {
+    "id": "circuit-app-001",
+    "name": "OrbitWatch",
+    "bundle": "com.orbitwatch.ctv",
+    "domain": "orbitwatch.example",
+    "storeurl": "https://www.samsung.com/smarttv/apps/example-orbitwatch-app",
+    "privacypolicy": 1,
+    "cat": ["IAB1"],
+    "publisher": {
+      "id": "circuit-pub-001",
+      "domain": "orbitwatch.example"
+    },
+    "content": {
+      "cat": ["IAB1"],
+      "genre": "genre_documentary",
+      "language": "en",
+      "len": 2640,
+      "livestream": 0,
+      "prodq": 1,
+      "contentrating": "TV-14"
+    }
+  },
+  "device": {
+    "devicetype": 3,
+    "make": "Samsung",
+    "model": "Samsung Smart TV",
+    "os": "Tizen",
+    "osv": "7.0",
+    "ua": "Mozilla/5.0 (SMART-TV; LINUX; Tizen 7.0)",
+    "ifa": "b7c2f4a1-0000-4000-8000-000000000002",
+    "lmt": 0,
+    "dnt": 0,
+    "js": 0,
+    "language": "en",
+    "ip": "198.51.100.204",
+    "geo": {
+      "type": 2,
+      "country": "USA",
+      "region": "CA",
+      "city": "Los Angeles",
+      "zip": "90012",
+      "lat": 34.0522,
+      "lon": -118.2437,
+      "utcoffset": -420
+    },
+    "ext": {
+      "ifa_type": "tifa"
+    }
+  },
+  "user": {
+    "ext": {
+      "eids": []
+    }
+  },
+  "regs": {
+    "coppa": 0,
+    "gpp": "DBABLA~1YNN",
+    "gpp_sid": [6]
+  },
+  "bcat": [
+    "IAB11-4",
+    "IAB7-39",
+    "IAB9-9",
+    "IAB7-30",
+    "IAB26",
+    "IAB25",
+    "IAB6-1"
+  ],
+  "badv": [
+    "justcbdstores.com",
+    "estrellatv.com",
+    "mysoulcbd.com",
+    "lionsden.com",
+    "newsmaxtv.com"
+  ]
+}

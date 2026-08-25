@@ -1,0 +1,16 @@
+{
+  "8a3f1e2d-0000-4000-8000-000000000001": {
+    "segments": [
+      { "id": "seg-age-25-34", "name": "age_25_34" },
+      { "id": "seg-gender-m", "name": "gender_male" },
+      { "id": "seg-auto-intender", "name": "auto_intenders" }
+    ]
+  },
+  "b7c2f4a1-0000-4000-8000-000000000002": {
+    "segments": [
+      { "id": "seg-age-35-44", "name": "age_35_44" },
+      { "id": "seg-gender-f", "name": "gender_female" },
+      { "id": "seg-home-improvement", "name": "home_improvement_intenders" }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "circuit-pub-001",
+  "disabled": false,
+  "debug_allow": true,
+  "targeting_prefix": "ctv_",
+  "cache_ttl": {
+    "video": 1800
+  }
+}

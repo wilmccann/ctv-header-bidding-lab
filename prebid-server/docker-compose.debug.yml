@@ -1,0 +1,23 @@
+# Debug overlay for docker-compose.yml — adds a Delve (Go debugger) port to
+# the prebid-server service without touching the normal build/run path.
+# Bring the stack up with (or just run ./start-debug.sh):
+#
+#   docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d --build
+#
+# Tear down exactly as usual — ./stop.sh / `docker compose down` — the
+# service and container names are unchanged; this file only swaps which
+# Dockerfile builds the prebid-server image and publishes Delve's port.
+# Only one variant (normal or debug) can run at a time, since both bind the
+# same host ports/container name.
+services:
+  prebid-server:
+    # Override docker-compose.yml's linux/amd64 pin (needed there only for a
+    # prebuilt PBS image with no arm64 build). Dockerfile.debug compiles PBS
+    # from source, so it can run natively on arm64 — which it must, since
+    # Delve's ptrace-based breakpoints are unreliable against a process
+    # running under Rosetta 2 emulation on Apple Silicon.
+    platform: linux/arm64
+    build:
+      dockerfile: prebid-server/Dockerfile.debug
+    ports:
+      - "2345:2345"   # Delve — attach from VS Code (see .vscode/launch.json)
