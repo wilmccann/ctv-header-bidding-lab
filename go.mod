@@ -13,11 +13,21 @@
 // prebid-server/Dockerfile and prebid-server/README-build.md) — this file
 // and go.sum are never read by Docker; only the modules/ortbvast/
 // subdirectory is part of the build context copy.
+//
+// The replace directive below points gopls at the local sibling clone
+// (../prebid-server, checked out at v4.8.0) instead of the read-only copy
+// go mod tidy downloaded into the module cache — so "Go to Definition" on
+// anything from hookstage/moduledeps lands in real, browsable, editable
+// source rather than an anonymous cache path. Remove it (or comment it
+// out) if that sibling folder ever moves or stops existing; everything
+// still resolves fine from the module cache without it.
 module ortb-vast
 
 go 1.25.0
 
 require github.com/prebid/prebid-server/v4 v4.8.0
+
+replace github.com/prebid/prebid-server/v4 => ../prebid-server
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
