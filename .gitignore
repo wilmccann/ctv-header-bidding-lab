@@ -1,6 +1,9 @@
-docs/*
-!docs/vast_4.2.xsd
+docs/reference-examples
 .DS_Store
 .idea/
 __pycache__/
-temp.txt
+
+# Local multi-root workspace file (points at a sibling prebid-server clone
+# via a machine-specific relative path — not something other contributors
+# necessarily have set up the same way).
+ortb-vast-dev.code-workspace

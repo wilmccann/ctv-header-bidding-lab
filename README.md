@@ -7,7 +7,7 @@ exchange: two mock 3rd-party STV publishers, three competing DSPs (including
 a 1st-party "house-dsp" seat), Prebid Cache, and a pre-auction filter/
 enrichment stage, all running as a custom-built Prebid Server image.
 
-**Start with [`ARCHITECTURE.md`](ARCHITECTURE.md)** if you're new to this
+**Start with [`ARCHITECTURE.md`](docs/ARCHITECTURE.md)** if you're new to this
 repo — it explains how Prebid Server's exchange actually matches an STV bid
 request to demand partners, and walks through why each piece below exists.
 
@@ -84,7 +84,7 @@ prebid-server/
 ### `tests/`
 
 A pytest integration suite exercising all of the above against the live
-harness — see [`TESTING.md`](TESTING.md) for what each test covers.
+harness — see [`TESTING.md`](docs/TESTING.md) for what each test covers.
 
 ## Running the Prebid Server harness
 
