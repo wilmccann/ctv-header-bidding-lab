@@ -1,4 +1,4 @@
-# ortb-vast
+# ctv-header-bidding-lab
 
 Hand-crafted OpenRTB video bid request/response examples for CTV (connected TV)
 header bidding, plus a local Prebid Server test harness for validating them
