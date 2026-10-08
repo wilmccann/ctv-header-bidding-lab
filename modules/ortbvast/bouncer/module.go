@@ -9,17 +9,11 @@
 // through by mistake — its only error mode is an occasional false
 // positive on good traffic, tunable via false_positive_rate below).
 //
-// NOTE ON PROVENANCE: this targets Prebid Server's documented Hooks/Modules
-// framework (docs.prebid.org/prebid-server/developers/add-a-module-go.html,
-// pkg.go.dev/github.com/prebid/prebid-server/v4/hooks/hookstage). The
-// hookstage.Entrypoint interface and HookResult[T]/ModuleInvocationContext
-// shapes were confirmed against that documentation; the exact field names
-// on hookstage.EntrypointPayload (assumed here: Request *http.Request,
-// Body []byte) were NOT verifiable against source during authoring because
-// GitHub raw fetches were unavailable in that session. Before `go build`,
-// diff this against the vendored hookstage package for your PBS version —
-// go.mod will resolve exactly which prebid-server version/commit you're
-// building modules against — and adjust field access if it doesn't compile.
+// Uses Prebid Server's Hooks/Modules framework
+// (docs.prebid.org/prebid-server/developers/add-a-module-go.html). Built and
+// tested against v4.8.0, where hookstage.EntrypointPayload exposes
+// Request *http.Request and Body []byte. A rejected request comes back as
+// HTTP 200 with an empty BidResponse carrying the configured nbr code.
 package bouncer
 
 import (

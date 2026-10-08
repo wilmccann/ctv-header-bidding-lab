@@ -1,11 +1,9 @@
-// This go.mod exists ONLY so VS Code's Go tooling (gopls) can resolve
+// This go.mod exists ONLY so Go tooling (gopls, go build/vet) can resolve
 // modules/ortbvast/{bouncer,enricher}'s imports of prebid-server's
 // hooks/hookstage and modules/moduledeps packages for local editing,
-// autocomplete, and error-checking — that's the "cannot find package ...
-// in GOROOT" error you're seeing: without a go.mod anywhere above those
-// files, gopls has no module context at all and falls back to legacy
-// GOPATH-style resolution, which only ever looks in GOROOT (the standard
-// library), never at third-party code.
+// autocomplete, and error-checking. Without a go.mod anywhere above those
+// files, gopls has no module context and reports "cannot find package ...
+// in GOROOT".
 //
 // It has NO effect on the actual Docker build: prebid-server/Dockerfile
 // clones prebid-server fresh into its own build stage and COPYs only
@@ -14,20 +12,21 @@
 // and go.sum are never read by Docker; only the modules/ortbvast/
 // subdirectory is part of the build context copy.
 //
-// The replace directive below points gopls at the local sibling clone
-// (../prebid-server, checked out at v4.8.0) instead of the read-only copy
-// go mod tidy downloaded into the module cache — so "Go to Definition" on
-// anything from hookstage/moduledeps lands in real, browsable, editable
-// source rather than an anonymous cache path. Remove it (or comment it
-// out) if that sibling folder ever moves or stops existing; everything
-// still resolves fine from the module cache without it.
+// For "Go to Definition" into editable prebid-server source instead of the
+// read-only module cache copy, clone prebid-server (at v4.8.0) next to this
+// repo and create a local, gitignored go.work at the repo root:
+//
+//   go 1.25.0
+//   use .
+//   replace github.com/prebid/prebid-server/v4 => ../prebid-server
+//
+// gopls and the go command pick it up automatically; without it, everything
+// resolves from the public module cache.
 module ortb-vast
 
 go 1.25.0
 
 require github.com/prebid/prebid-server/v4 v4.8.0
-
-replace github.com/prebid/prebid-server/v4 => ../prebid-server
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect

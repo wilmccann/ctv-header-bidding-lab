@@ -2,7 +2,7 @@
 
 Hand-crafted OpenRTB video bid request/response examples for CTV (connected TV)
 header bidding, plus a local Prebid Server test harness for validating them
-against a real auction/response pipeline — now modeling a small multi-publisher
+against a real auction/response pipeline. It models a small multi-publisher
 exchange: two mock 3rd-party STV publishers, three competing DSPs (including
 a 1st-party "house-dsp" seat), Prebid Cache, and a pre-auction filter/
 enrichment stage, all running as a custom-built Prebid Server image.
@@ -27,21 +27,32 @@ request to demand partners, and walks through why each piece below exists.
   a 3-seat stored response (`house-dsp`, `nova-dsp`, `orbit-dsp`) so the
   auction actually has competing demand to rank, instead of one canned bid.
 - **`circuittv-ortb-request-pbs-test.json`** — a **second** STV publisher
-  ("CircuitTV", a Samsung Tizen app), its own PBS account, its own floors/
-  deal, and the same 3-DSP demand pool bidding across both publishers.
+  ("CircuitTV", a Samsung Tizen app) with its own PBS account, its own
+  floors and deal in the request, and the same 3-DSP demand pool bidding
+  across both publishers.
+- **`flextechads-ortb-request-pbs-test-{debug,floor,targeting}.json`** —
+  single-change variants of the PBS test request (debug trace, raised imp
+  floor, targeting keys), each described in [`TESTING.md`](docs/TESTING.md).
 
 ### `docs/`
 
-Reference material (gitignored — not tracked in version control): the
-OpenRTB 2.6 and VAST 4.3 specs, the IAB CTV VAST addendum, and the original
-unmodified example payloads these mocks were built from.
+- **[`ARCHITECTURE.md`](docs/ARCHITECTURE.md)** — how PBS matches STV
+  requests to demand, and how this repo's pieces fit together.
+- **[`TESTING.md`](docs/TESTING.md)** — curl recipes and what each pytest
+  module covers.
+- **[`RETROSPECTIVE-delve-debugging.md`](docs/RETROSPECTIVE-delve-debugging.md)**
+  — why Delve breakpoints silently failed under Rosetta emulation, and the fix.
+- **`vast_4.2.xsd`** — the IAB VAST 4.2 schema, used by
+  `scripts/validate-vast.sh` (see [Third-party material](#third-party-material)).
+
+[`prebid-server/README-build.md`](prebid-server/README-build.md) covers
+building, debugging (Delve + VS Code), and upgrading the custom PBS image.
 
 ### `modules/ortbvast/`
 
 Custom Prebid Server Go modules — PBS's real Hooks/Modules extension point,
 compiled into the binary (there's no runtime plugin loading). See
-`ARCHITECTURE.md` §4 for the design and an explicit note on what's confirmed
-vs. assumed about the module API surface.
+`ARCHITECTURE.md` §4 for the design.
 
 - **`bouncer/`** — `entrypoint`-stage hook: an in-process Bloom filter
   checking the request's source IP against a known-bad list, rejecting
@@ -65,9 +76,13 @@ VAST assembly, caching) without calling any real bidder adapter.
 ```
 prebid-server/
   Dockerfile            # clones + builds PBS from source with modules/ortbvast/ vendored in
+  Dockerfile.debug      # same build, unoptimized and launched under Delve
   docker-compose.yml    # builds prebid-server, runs prebid/prebid-cache:v0.30.0
+  docker-compose.debug.yml  # overlay: swaps in Dockerfile.debug, exposes Delve on :2345
   pbs.yaml              # accounts, cache, hooks (bouncer/enricher) config
   start.sh / stop.sh    # build + bring the stack up/down
+  start-debug.sh        # build + bring up the Delve-enabled stack
+  README-build.md       # build, verify, debug, upgrade
   cache-config/
     bouncer-blocklist.txt      # IPs the Bouncer rejects
     enricher-profiles.json     # mock device-ID → audience-segment store
@@ -78,6 +93,7 @@ prebid-server/
     stored_responses/
       flex-resp-imp1..3.json           # original single-seat fixtures
       flex-resp-imp1-multidsp.json     # 3-seat competing-DSP fixture
+      flex-resp-imp3-nobid.json        # seat with an empty bid[] (partial no-bid test)
       circuit-resp-imp1..2.json        # CircuitTV's 3-seat fixtures
 ```
 
@@ -86,18 +102,28 @@ prebid-server/
 A pytest integration suite exercising all of the above against the live
 harness — see [`TESTING.md`](docs/TESTING.md) for what each test covers.
 
+### `scripts/`
+
+- **`validate-vast.sh [request.json]`** — posts a request to the running
+  harness and validates each bid's VAST against `docs/vast_4.2.xsd`. Needs
+  `xmllint` (libxml2; preinstalled on macOS). On the default request it
+  exits non-zero **by design**: `flex-resp-imp3.json` is an intentionally
+  invalid fixture (see `TESTING.md`).
+
 ## Running the Prebid Server harness
 
-Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(amd64 or Apple Silicon) and, for the test suite, Python 3.9+.
 
 ```bash
 cd prebid-server
 ./start.sh    # docker compose build (first run compiles PBS from source —
               # several minutes), then docker compose up -d, waits for
               # /status to go healthy
+cd ..
 ```
 
-Then send a test request:
+Then, from the repo root, send a test request:
 
 ```bash
 curl -s -X POST http://localhost:8000/openrtb2/auction \
@@ -112,16 +138,39 @@ $9.25 open), plus the original single-seat imps 2/3, each with a VAST `adm`.
 Run the full integration suite instead of hand-checking curl output:
 
 ```bash
-pip install -r tests/requirements.txt
-pytest tests/
+python3 -m venv .venv
+.venv/bin/pip install -r tests/requirements.txt
+.venv/bin/pytest tests/
 ```
 
+Stop the stack with:
+
 ```bash
-./stop.sh     # docker compose down
+prebid-server/stop.sh     # docker compose down
 ```
 
 **Note:** stored-response and account fixtures are loaded into memory once
 at server startup. If you edit anything under `stored_requests/` or
-`cache-config/`, restart the stack (`./stop.sh && ./start.sh`) to pick up
-the change. Editing `modules/ortbvast/*` requires a rebuild
-(`docker compose build`), since those are compiled into the binary.
+`cache-config/`, or `pbs.yaml`, restart the stack
+(`prebid-server/stop.sh && prebid-server/start.sh`) to pick up the change.
+Editing `modules/ortbvast/*` requires a rebuild (`docker compose build`),
+since those are compiled into the binary.
+
+To step through the Bouncer/Enricher Go code with a debugger, use
+`prebid-server/start-debug.sh` and the VS Code attach configuration in
+`.vscode/launch.json` — walkthrough in
+[`prebid-server/README-build.md`](prebid-server/README-build.md#debugging-the-compiled-hooks-bouncerenricher-in-vs-code).
+
+## License
+
+[MIT](LICENSE), except as noted below.
+
+### Third-party material
+
+- **`docs/vast_4.2.xsd`** is the IAB Tech Lab VAST 4.2 schema, included
+  unmodified from [InteractiveAdvertisingBureau/vast](https://github.com/InteractiveAdvertisingBureau/vast)
+  so `scripts/validate-vast.sh` works offline. It remains IAB Tech Lab's
+  material, is not covered by this repo's MIT license, and is subject to
+  that repository's terms.
+- Prebid Server and Prebid Cache are cloned/pulled at build time and are
+  licensed by Prebid.org under Apache 2.0; neither is redistributed here.

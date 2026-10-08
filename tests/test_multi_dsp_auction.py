@@ -20,9 +20,10 @@ def test_three_dsps_bid_on_flextechads_imp1(post_auction):
     for seat in ("house-dsp", "nova-dsp", "orbit-dsp"):
         assert seat in seats, f"expected seat {seat} in response, got {sorted(seats)}"
 
+    # only the three DSP seats bid on imp 1; "flextechads" covers imps 2/3
     prices = {
-        seat: next(b["price"] for b in bids if b["impid"] == "1")
-        for seat, bids in seats.items()
+        seat: next(b["price"] for b in seats[seat] if b["impid"] == "1")
+        for seat in ("house-dsp", "nova-dsp", "orbit-dsp")
     }
     assert prices["house-dsp"] == pytest.approx(11.0)
     assert prices["nova-dsp"] == pytest.approx(10.0)
@@ -43,7 +44,9 @@ def test_highest_bid_wins_generic_targeting_keys(post_auction):
     the ranking signal itself: house-dsp's $11 open-auction bid beats
     nova-dsp's $10 deal bid and orbit-dsp's $9.25 bid, so house-dsp gets
     the unprefixed hb_bidder/hb_pb keys, while every seat still gets its
-    own per-bidder keys, and only nova-dsp's bid carries hb_deal.
+    own per-bidder keys, and only nova-dsp's bid carries a deal key. Since
+    nova-dsp isn't the winner, that's the per-bidder hb_deal_nova-dsp —
+    PBS only sets unprefixed keys (including hb_deal) on the winning bid.
     """
     body = load_example("flextechads-ortb-request-pbs-test-multidsp.json")
     resp = post_auction(body)
@@ -61,4 +64,9 @@ def test_highest_bid_wins_generic_targeting_keys(post_auction):
         )
 
     nova_targeting = targeting_for(data, impid="1", seat="nova-dsp")
-    assert nova_targeting.get("hb_deal") == "FLEXTECHADS-PMP-DEAL-001"
+    assert nova_targeting.get("hb_deal_nova-dsp") == "FLEXTECHADS-PMP-DEAL-001"
+    for seat in ("house-dsp", "orbit-dsp"):
+        t = targeting_for(data, impid="1", seat=seat)
+        assert not any(k.startswith("hb_deal") for k in t), (
+            f"{seat} shouldn't carry a deal key: {t}"
+        )

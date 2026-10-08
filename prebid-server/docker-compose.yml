@@ -11,7 +11,9 @@ services:
       dockerfile: prebid-server/Dockerfile
       args:
         PBS_VERSION: v4.8.0
-    platform: linux/amd64   # PBS has no arm64 build; runs under Rosetta emulation on Apple Silicon
+    # No platform pin: the image is compiled from source on a multi-arch Go
+    # base image, so it builds and runs natively on both amd64 and arm64
+    # (Apple Silicon) hosts.
     container_name: ortb-vast-prebid-server
     ports:
       - "8000:8000"   # /openrtb2/auction
@@ -27,7 +29,7 @@ services:
 
   prebid-cache:
     image: prebid/prebid-cache:v0.30.0
-    platform: linux/amd64
+    platform: linux/amd64   # prebid-cache publishes amd64 images only; runs under emulation on Apple Silicon
     container_name: ortb-vast-prebid-cache
     ports:
       - "2424:2424"   # POST/GET /cache
