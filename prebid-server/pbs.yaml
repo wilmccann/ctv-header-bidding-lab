@@ -5,12 +5,21 @@ admin_port: 6060
 # (app.publisher.id / site.publisher.id) or PBS rejects it outright, rather
 # than silently falling back to global defaults. This is the config flag
 # that turns "single mock exchange" into "hub with isolated publishers."
+#
+# account_required alone isn't enough: PBS only rejects an unknown account
+# ID when account_defaults.disabled is also true (otherwise it falls back to
+# the defaults). Registered accounts must then set "disabled": false
+# explicitly, since their JSON is merged over these defaults.
 account_required: true
+account_defaults:
+  disabled: true
 
+# directorypath is the *parent* of accounts/: the filesystem fetcher looks
+# up account files under its "accounts" subdirectory.
 accounts:
   filesystem:
     enabled: true
-    directorypath: ./stored_requests/data/by_id/accounts
+    directorypath: ./stored_requests/data/by_id
 
 gdpr:
   default_value: "0"
@@ -38,15 +47,9 @@ cache:
 
 # Pre-auction hooks: Bouncer (entrypoint-stage bad-IP bloom filter) and
 # Enricher (raw_auction_request-stage identity decoration). See
-# modules/ortbvast/{bouncer,enricher}/module.go and ARCHITECTURE.md §4.
-#
-# VERIFY BEFORE RUNNING: this YAML shape mirrors the JSON example in
-# docs.prebid.org/prebid-server/developers/add-a-module-go.html; the exact
-# key names (in particular whether it's `host_execution_plan` at the top
-# level or nested under an account/endpoint-specific plan for this PBS
-# version) should be cross-checked against the vendored config docs for
-# whatever tag Dockerfile actually builds, and adjusted if PBS logs a
-# config parse warning/error on startup.
+# modules/ortbvast/{bouncer,enricher}/module.go and docs/ARCHITECTURE.md §4.
+# host_execution_plan runs for every request, whichever account it resolves
+# to.
 hooks:
   enabled: true
   modules:

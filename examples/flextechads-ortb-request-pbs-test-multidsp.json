@@ -56,6 +56,11 @@
         "prebid": {
           "storedauctionresponse": {
             "id": "flex-resp-imp1-multidsp"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
           }
         }
       }
@@ -102,6 +107,11 @@
         "prebid": {
           "storedauctionresponse": {
             "id": "flex-resp-imp2"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
           }
         }
       }
@@ -148,6 +158,11 @@
         "prebid": {
           "storedauctionresponse": {
             "id": "flex-resp-imp3"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
           }
         }
       }

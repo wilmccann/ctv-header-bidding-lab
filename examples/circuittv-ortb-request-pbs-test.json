@@ -54,6 +54,11 @@
         "prebid": {
           "storedauctionresponse": {
             "id": "circuit-resp-imp1"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
           }
         }
       }
@@ -89,6 +94,11 @@
         "prebid": {
           "storedauctionresponse": {
             "id": "circuit-resp-imp2"
+          },
+          "bidder": {
+            "appnexus": {
+              "placementId": 0
+            }
           }
         }
       }
@@ -150,7 +160,7 @@
   },
   "regs": {
     "coppa": 0,
-    "gpp": "DBABLA~1YNN",
+    "gpp": "DBABTA~1YNN",
     "gpp_sid": [6]
   },
   "bcat": [
