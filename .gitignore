@@ -1,6 +1,7 @@
 docs/reference-examples
 .DS_Store
 .idea/
+.vscode/
 __pycache__/
 
 # Local multi-root workspace file (points at a sibling prebid-server clone
