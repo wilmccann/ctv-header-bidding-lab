@@ -173,3 +173,16 @@ next attach.
   target: find a signal that's independent of the layer you suspect is
   lying to you (VS Code's UI, in this case) rather than iterating inside
   that same layer.
+
+## Follow-up (2026-10-07)
+
+The "production pin is untouched" reasoning in [Fix](#fix) turned out to be
+stale too: by this point the production `Dockerfile` also compiled Prebid
+Server from source, so its `linux/amd64` pin was the same unnecessary
+baggage. The pin was removed from `prebid-server` in `docker-compose.yml`
+(kept only on `prebid-cache`, which genuinely publishes amd64-only images),
+and the `linux/arm64` override was dropped from `docker-compose.debug.yml`.
+Both images now build natively for whatever host they're on. That also
+removes a latent bug: a hard `arm64` override would have forced the debug
+image under emulation on amd64 hosts, recreating the original problem in
+reverse.

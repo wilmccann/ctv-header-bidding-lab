@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to Bouncer/Enricher (Docker)",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "host": "127.0.0.1",
+            "port": 2345,
+            "substitutePath": [
+                { "from": "${workspaceFolder}", "to": "/src" }
+            ]
+        },
+        {
+            "name": "Python: Debug Current Test File (pytest)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["${file}"],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

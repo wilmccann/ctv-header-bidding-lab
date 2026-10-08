@@ -1,10 +1,21 @@
 docs/reference-examples
 .DS_Store
 .idea/
-.vscode/
 __pycache__/
+.venv/
+
+# Shared VS Code config (Delve attach + pytest wiring) is tracked; anything
+# else under .vscode/ is personal.
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
 
 # Local multi-root workspace file (points at a sibling prebid-server clone
 # via a machine-specific relative path — not something other contributors
 # necessarily have set up the same way).
 ortb-vast-dev.code-workspace
+
+# Local Go workspace pointing gopls at a sibling prebid-server clone — see
+# the comment at the top of go.mod.
+go.work
+go.work.sum

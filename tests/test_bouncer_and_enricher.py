@@ -2,10 +2,8 @@
 Exercises the pre-bid pipeline from ARCHITECTURE.md §4: the Bouncer
 (entrypoint-stage bad-IP bloom filter) and the Enricher (raw_auction_request
 -stage identity decoration). Both modules are new/custom (modules/ortbvast/
-{bouncer,enricher}/module.go) — see that file's "NOTE ON PROVENANCE" comment
-for what's confirmed against Prebid Server's docs vs. assumed. These tests
-are the fastest way to find out, once the custom image is actually running,
-whether the assumptions held.
+{bouncer,enricher}/module.go), compiled into the image built by
+prebid-server/Dockerfile.
 """
 import requests
 
@@ -26,10 +24,8 @@ def test_bouncer_blocks_known_bad_ip():
     valid auction request sent with a blocklisted forwarded-for header
     should be rejected before the auction ever runs.
 
-    STATUS-CODE CAVEAT: exactly what a Reject=true entrypoint hook returns
-    (a 4xx, or a 200 with no seatbid) wasn't verifiable against live PBS
-    behavior during authoring. Tighten this assertion to the real status
-    code once you've run it against the built image.
+    PBS answers a rejected entrypoint hook with HTTP 200 and an empty
+    BidResponse whose nbr is pbs.yaml's configured nbr_code (2).
     """
     body = load_example("flextechads-ortb-request-pbs-test.json")
     resp = requests.post(
@@ -38,11 +34,13 @@ def test_bouncer_blocks_known_bad_ip():
         headers={"X-Forwarded-For": BLOCKED_IP},
         timeout=10,
     )
-    blocked = resp.status_code >= 400 or not resp.json().get("seatbid")
-    assert blocked, (
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data.get("nbr") == 2, (
         f"expected the Bouncer to reject a request from a blocklisted IP "
-        f"({BLOCKED_IP}), got {resp.status_code}: {resp.text[:500]}"
+        f"({BLOCKED_IP}) with nbr 2, got: {resp.text[:500]}"
     )
+    assert not data.get("seatbid"), data
 
 
 def test_bouncer_allows_clean_ip(post_auction):

@@ -116,7 +116,9 @@ the unprefixed `hb_*` targeting keys.
 the targeting output (request already sets `ext.prebid.targeting: {}`),
 `house-dsp`'s bid on imp 1 carries the generic `hb_bidder`/`hb_pb` keys
 (it has the highest price), every seat has its own `hb_pb_<seat>` key, and
-only `nova-dsp`'s bid carries `hb_deal`.
+only `nova-dsp`'s bid carries a deal key — the per-bidder
+`hb_deal_nova-dsp`, since PBS only sets unprefixed keys like `hb_deal` on
+the winning bid.
 
 ### Publisher account isolation
 
@@ -166,20 +168,20 @@ curl -s -X POST http://localhost:8000/openrtb2/auction \
 
 **Tests:** `192.0.2.66` is in `prebid-server/cache-config/bouncer-blocklist.txt`.
 The Bouncer module runs at the `entrypoint` stage, before the request body
-is even parsed, and should reject this before the auction runs.
+is even parsed, and rejects this before the auction runs.
+
+**Look for:** HTTP `200` with an empty response carrying only the no-bid
+reason, `{"id":"fx-req-0001a2b3c4d5","nbr":2}`, instead of a normal
+`seatbid[]`.
 
 **Run (Enricher):** the debug-mode recipe above, then check
 `ext.debug.resolvedrequest.user.data` for a `name: "ortbvast-mock-idsp"`
 block — `device.ifa` in that fixture matches an entry in
 `prebid-server/cache-config/enricher-profiles.json`.
 
-**Caveat:** both modules require the custom-built image
-(`prebid-server/Dockerfile`) and their exact runtime behavior — especially
-the Bouncer's HTTP status code on rejection — was not verified against a
-running instance while authoring this (see `ARCHITECTURE.md` §4, "A note on
-confidence"). Run these first after any change to confirm the assumptions
-in the module code hold, and adjust `tests/test_bouncer_and_enricher.py`'s
-assertions to match what you actually see.
+Both modules are compiled into the custom-built image
+(`prebid-server/Dockerfile`), so changes to them need a
+`docker compose build` before these results change.
 
 ### VAST cache round-trip
 
@@ -205,8 +207,7 @@ curl -s "http://localhost:2424/cache?uuid=$CACHE_ID"
 ```
 
 **Tests:** the `prebid-cache` service (added in `docker-compose.yml`) and
-`pbs.yaml`'s `cache:` block actually work end to end — this was previously
-a documented no-op in this repo (no cache service, no config).
+`pbs.yaml`'s `cache:` block actually work end to end.
 
 **Look for:** a `hb_cache_id` targeting key in the auction response, and the
 `GET /cache` call returning the same VAST XML that was in the winning bid's
@@ -216,34 +217,38 @@ a documented no-op in this repo (no cache service, no config).
 
 - [x] **Debug-mode request** — see [Debug-mode trace](#debug-mode-trace).
 - [x] **Targeting key-values** — see
-      `examples/flextechads-ortb-request-pbs-test-targeting.json` (unchanged
-      from the original harness; still demonstrates `hb_deal` present/absent
-      per bid and the `hb_bidder_flextechad` 20-char GAM key-name truncation).
+      `examples/flextechads-ortb-request-pbs-test-targeting.json`, which
+      demonstrates `hb_deal` present/absent per bid and the
+      `hb_bidder_flextechad` 20-char GAM key-name truncation.
 - [x] **Floor-vs-deal edge case** — see
       [Floor-vs-deal edge case](#floor-vs-deal-edge-case).
-- [x] **VAST schema validation** — `scripts/validate-vast.sh`, unchanged
-      from the original harness. `flex-resp-imp1.json`/`flex-resp-imp2.json`
-      validate; `flex-resp-imp3.json` is left intentionally invalid as a
-      known-failing case. The new multi-DSP and CircuitTV fixtures follow
-      the same validated element ordering (`Impression` before
-      `AdServingId`/`AdTitle`, `TrackingEvents` before `Duration`/
-      `MediaFiles`, `UniversalAdId` present on every `Creative`) — worth
-      re-running `scripts/validate-vast.sh` against them if you add more.
+- [x] **VAST schema validation** — `scripts/validate-vast.sh [request.json]`
+      (needs `xmllint` from libxml2, and the harness running) posts a
+      request, extracts each bid's VAST `adm`, and validates it against
+      `docs/vast_4.2.xsd`. On the default request,
+      `flex-resp-imp1.json`/`flex-resp-imp2.json` validate and
+      `flex-resp-imp3.json` is **intentionally invalid** (`AdTitle` before
+      `Impression`), so the script exits non-zero by design. The CircuitTV
+      fixtures and the multi-DSP imp 1 fixture validate; the multi-DSP
+      request still fails on imp 3 because it reuses `flex-resp-imp3.json`.
+      Keep the validated element ordering
+      (`Impression` before `AdServingId`/`AdTitle`, `TrackingEvents` before
+      `Duration`/`MediaFiles`, `UniversalAdId` on every `Creative`) when
+      adding fixtures, and re-run the script against them.
 - [x] **Cache round-trip** — see
-      [VAST cache round-trip](#vast-cache-round-trip). Was a documented
-      no-op; now testable now that `prebid-cache` and `cache:` config exist.
-- [x] **Partial no-bid case** — `tests/test_partial_no_bid.py`: removes
-      `ext.prebid.storedauctionresponse` from one imp with no real bidder
-      configured; confirms PBS returns the other 2 bids plus a clean no-bid
-      for that slot instead of erroring the whole auction.
+      [VAST cache round-trip](#vast-cache-round-trip).
+- [x] **Partial no-bid case** — `tests/test_partial_no_bid.py`: points
+      imp 3 at `flex-resp-imp3-nobid`, a stored response whose seat returns
+      an empty `bid[]`; confirms PBS returns the other 2 bids plus a clean
+      no-bid for that slot instead of erroring the whole auction. (Simply
+      removing `storedauctionresponse` from one imp doesn't work: PBS
+      rejects requests where it's present on some imps but not others.)
 - [x] **Multi-DSP exchange matching** — see
       [Multi-DSP exchange matching](#multi-dsp-exchange-matching).
 - [x] **Publisher account isolation** — see
       [Publisher account isolation](#publisher-account-isolation).
 - [x] **Pre-bid Bouncer / Enricher pipeline** — see
-      [Pre-bid Bouncer / Enricher pipeline](#pre-bid-bouncer--enricher-pipeline)
-      — status: implemented, **not yet verified against a running build**
-      (see the caveat in that section).
+      [Pre-bid Bouncer / Enricher pipeline](#pre-bid-bouncer--enricher-pipeline).
 - [ ] **GPP opt-out variants** — swap `regs.gpp` for a USNAT string with the
       sale/share opt-out bits set, or set `regs.coppa: 1`, and check whether
       `device.ifa` / `device.geo` precision get stripped. Still open.

@@ -11,17 +11,10 @@
 // from a JSON fixture at startup, so swapping in a real client later means
 // changing the Builder function, not the hook logic.
 //
-// NOTE ON PROVENANCE: same caveat as modules/ortbvast/bouncer — the
-// hookstage.RawAuctionRequest interface and HookResult[T]/ChangeSet[T]
-// shapes are per Prebid Server's documented Hooks framework
-// (docs.prebid.org/prebid-server/developers/add-a-module-go.html), but this
-// module assumes hookstage.RawAuctionRequestPayload is a
-// json.RawMessage-shaped payload (the raw, not-yet-decoded-into-openrtb2.BidRequest
-// auction body), matching the "Raw" naming and the fact that its stage runs
-// before stored-request merge. That specific type alias was not verifiable
-// against source during authoring (GitHub raw fetch was unavailable) —
-// confirm it against the vendored hookstage package before `go build` and
-// adjust the payload handling below if it's already a decoded struct.
+// Built and tested against Prebid Server v4.8.0, where
+// hookstage.RawAuctionRequestPayload is a []byte (the raw, not-yet-decoded
+// auction body) — this stage runs before stored-request merge. If you bump
+// PBS_VERSION, re-check that type in the new tag's hooks/hookstage package.
 package enricher
 
 import (

@@ -1,69 +1,20 @@
 # Building the custom Prebid Server image
 
-`prebid-server/` no longer runs the stock `prebid/prebid-server` image — it
+`prebid-server/` doesn't run the stock `prebid/prebid-server` image — it
 builds one from source with the `ortbvast` Bouncer and Enricher hooks
 (`modules/ortbvast/{bouncer,enricher}`) compiled in, because PBS's Go module
-system has no runtime plugin loading (see `ARCHITECTURE.md` §4). This doc is
-the build/verification checklist that `ARCHITECTURE.md` §5 points to.
+system has no runtime plugin loading (see `docs/ARCHITECTURE.md` §4). This
+doc covers building, verifying, debugging, and upgrading that image.
 
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), with
   network access for the first build (it clones `prebid/prebid-server` from
   GitHub and pulls Go module dependencies).
-- On Apple Silicon: no change needed. `docker-compose.yml` already pins
-  `platform: linux/amd64` for both services — PBS has no arm64 build, so it
-  runs under Rosetta emulation.
-
-## Before you build: verify the unverified assumptions
-
-Everything below was written against Prebid Server's **published docs**
-(`docs.prebid.org/prebid-server/developers/add-a-module-go.html`,
-`pkg.go.dev/github.com/prebid/prebid-server/v2/hooks/hookstage`), not against
-a fetched copy of the `v4.8.0` source tree — GitHub raw fetches were
-unavailable in the session that wrote these files. Each file says so inline
-(`NOTE ON PROVENANCE`, `VERIFY BEFORE BUILDING`/`VERIFY BEFORE RUNNING`
-comments). Treat a clean `docker compose build` as the actual confirmation,
-not this doc — but check these three things first, since they're the parts
-most likely to have drifted from the docs by `v4.8.0`:
-
-1. **Go import path / module version** — `modules/ortbvast/bouncer/module.go`
-   and `modules/ortbvast/enricher/module.go` both import
-   `github.com/prebid/prebid-server/v2/hooks/hookstage`. After the
-   Dockerfile's clone step, confirm that path still matches the repo's own
-   module declaration:
-
-   ```bash
-   git clone --depth 1 --branch v4.8.0 https://github.com/prebid/prebid-server.git /tmp/pbs-check
-   grep ^module /tmp/pbs-check/go.mod
-   ```
-
-   If the major version segment differs (e.g. it's `v3` or unversioned by
-   `v4.8.0`), update the import paths in both `module.go` files before
-   building — the Go compiler will fail loudly if this is wrong, so a clean
-   build is sufficient confirmation this one is fine.
-
-2. **`hookstage` payload/result field shapes** — `bouncer/module.go` assumes
-   `hookstage.EntrypointPayload` exposes `Request *http.Request` and `Body
-   []byte`; `enricher/module.go` assumes `hookstage.RawAuctionRequestPayload`
-   is a `json.RawMessage`-shaped raw body (pre-decode). Both assumptions are
-   documented inline next to where they're used. If `go build` fails inside
-   the Dockerfile's build stage on a field-access error, this is almost
-   certainly why — diff the vendored `hookstage` package at
-   `/tmp/pbs-check/hooks/hookstage` against the assumptions above and adjust
-   field access in the module code.
-
-3. **`pbs.yaml` hooks config shape** — the `hooks:` block's key names
-   (`host_execution_plan` at the top level vs. nested under an
-   account/endpoint-specific plan) mirror the JSON example in the same PBS
-   docs page, not a config PBS `v4.8.0` was confirmed to parse. If the
-   container starts but logs a config parse warning/error for the `hooks:`
-   section, cross-check `pbs.yaml`'s shape against
-   `/tmp/pbs-check/docs/end-to-end.md` or the vendored hooks config loader
-   under `config/`.
-
-You can discard `/tmp/pbs-check` once you've checked these — the Dockerfile
-does its own clone during the actual build.
+- Works on both amd64 and arm64 (Apple Silicon) hosts. The PBS image is
+  compiled natively for your machine; only the `prebid-cache` sidecar is
+  pinned to `linux/amd64` (it has no arm64 image) and runs under emulation
+  on Apple Silicon.
 
 ## Build
 
@@ -87,14 +38,8 @@ cd prebid-server
 docker compose build
 ```
 
-**If the build fails:** it's almost always one of the two Go-level
-assumptions in step 1/2 above. The compiler error will name the missing
-field or type — that error is the actual authoritative answer, more so than
-anything in this doc.
-
-**If the build succeeds but the container won't start / logs a config
-error:** check `docker compose logs -f prebid-server` first; if it's a hooks
-config parse error, see step 3 above.
+If the container builds but won't start, check
+`docker compose logs -f prebid-server` first.
 
 ## Verify the running stack
 
@@ -118,16 +63,16 @@ curl -s -X POST http://localhost:8000/openrtb2/auction \
 
 Look for a `user.data[]` entry from `ortbvast-mock-idsp` in the resolved
 request. If it's missing, the Enricher hook either isn't wired into
-`host_execution_plan` correctly (step 3 above) or the fixture's `device.ifa`
-doesn't match an entry in `cache-config/enricher-profiles.json`.
+`host_execution_plan` in `pbs.yaml` or the fixture's `device.ifa` doesn't
+match an entry in `cache-config/enricher-profiles.json`.
 
 For the Bouncer, add an IP from `cache-config/bouncer-blocklist.txt` as
-`X-Forwarded-For` on a request and confirm you get a rejection (`204`, or a
-no-bid response carrying the configured `nbr_code`) instead of a normal
-auction response.
+`X-Forwarded-For` on a request. A blocked request comes back as HTTP 200
+with an empty response carrying the configured no-bid reason —
+`{"id": "...", "nbr": 2}` — instead of a normal auction response.
 
 For full coverage, run the pytest suite instead of hand-checking curl output
-— see `TESTING.md` for what each test covers:
+— see `docs/TESTING.md` for what each test covers:
 
 ```bash
 cd ..   # back to repo root
@@ -140,8 +85,29 @@ pytest tests/
 | Change | Action needed |
 |---|---|
 | `modules/ortbvast/{bouncer,enricher}/module.go` | `docker compose build` (compiled into the binary) |
-| `PBS_VERSION` in `docker-compose.yml` | `docker compose build` (re-clones at the new tag) |
-| `pbs.yaml`, `stored_requests/`, `cache-config/*` | Config/fixtures are loaded at container startup only — `./stop.sh && ./start.sh` is enough, no rebuild |
+| `PBS_VERSION` in `docker-compose.yml` | `docker compose build` (re-clones at the new tag) — see "Upgrading Prebid Server" below |
+| `pbs.yaml`, `stored_requests/`, `cache-config/*` | Config/fixtures are loaded at container startup only — `docker compose restart prebid-server` (or `./stop.sh && ./start.sh`) is enough, no rebuild |
+
+## Upgrading Prebid Server
+
+Everything here is built and tested against PBS **v4.8.0**. To move to a
+newer tag, update `PBS_VERSION` in `docker-compose.yml` and both
+Dockerfiles, then check, in order:
+
+1. **Go import path** — the modules import
+   `github.com/prebid/prebid-server/v4/...`. If the new tag's `go.mod`
+   declares a different major version, update the imports in both
+   `module.go` files and the `require` line in the root `go.mod`.
+2. **Go toolchain** — the Dockerfiles build on `golang:1.25-bookworm`. Match
+   the new tag's `go.mod` `go` directive if it's newer.
+3. **Hook payload types** — the modules depend on
+   `hookstage.EntrypointPayload` exposing `Request *http.Request` and on
+   `hookstage.RawAuctionRequestPayload` being the raw `[]byte` body. A
+   compile error in the Dockerfile's build stage will name the field or type
+   that changed.
+4. **Behavior** — run `pytest tests/`. The suite pins down behavior that
+   has changed between PBS releases before (account-required semantics,
+   unprefixed vs. per-bidder targeting keys, stored-response validation).
 
 ## Debugging the compiled hooks (Bouncer/Enricher) in VS Code
 
@@ -151,8 +117,8 @@ inside a separate Go process in the container, not in the Python test
 process. To step into it, run a **second, independent debug session**: a Go
 debugger (Delve) attached directly to the containerized `prebid-server`
 binary. You'd set a breakpoint in VS Code, then trigger it by sending a
-request from anywhere — `curl`, the pytest suite, PyCharm — same as normal;
-execution pauses in VS Code, not in whatever sent the request.
+request from anywhere — `curl`, the pytest suite, another IDE — same as
+normal; execution pauses in VS Code, not in whatever sent the request.
 
 This uses a separate debug build (`Dockerfile.debug` / `docker-compose.debug.yml`)
 so the normal `./start.sh` image is untouched — the debug image disables Go
@@ -161,15 +127,15 @@ and launches the binary under Delve instead of running it directly.
 
 **One-time setup:** install the ["Go" extension](https://marketplace.visualstudio.com/items?itemName=golang.Go)
 in VS Code (Extensions icon in the left sidebar, search "Go", the one
-published by "Go Team at Google") if you haven't already. `.vscode/launch.json`
-at the repo root already has the attach configuration set up — nothing else
-to configure.
+published by "Go Team at Google") if you haven't already. The repo's
+`.vscode/launch.json` already has the attach configuration set up — nothing
+else to configure.
 
 **Each debugging session:**
 
-1. Open the `ortb-vast` folder itself in VS Code (File → Open Folder... →
-   pick the repo root, not a subfolder) — `.vscode/launch.json` is only
-   picked up when the folder containing it is the open workspace.
+1. Open the repo root itself in VS Code (File → Open Folder... → pick the
+   repo root, not a subfolder) — `.vscode/launch.json` is only picked up
+   when the folder containing it is the open workspace.
 2. Start the debug-enabled stack instead of the normal one:
    ```bash
    cd prebid-server
@@ -181,15 +147,15 @@ to configure.
 3. In `modules/ortbvast/bouncer/module.go`, click in the gutter (the empty
    strip left of the line numbers) next to a line inside
    `HandleEntrypointHook` — e.g. the `if m.filter.mightContain(ip) {` line —
-   to set a breakpoint (a red dot appears). Same gesture as PyCharm.
+   to set a breakpoint (a red dot appears).
 4. Open the **Run and Debug** panel: the sidebar icon that looks like a play
    button with a bug on it (or press `Cmd+Shift+D`). At the top of that
    panel there's a dropdown — select **"Attach to Bouncer/Enricher
    (Docker)"** — then click the green play arrow next to it (or press `F5`).
    VS Code connects to Delve inside the container; a floating debug toolbar
    appears once attached.
-5. Trigger the breakpoint however you like — re-run
-   `test_bouncer_blocks_known_bad_ip` in PyCharm, or from any terminal:
+5. Trigger the breakpoint however you like — run
+   `test_bouncer_blocks_known_bad_ip`, or from any terminal:
    ```bash
    curl -s -X POST http://localhost:8000/openrtb2/auction \
      -H "Content-Type: application/json" \
@@ -209,12 +175,22 @@ to configure.
    stop the server — it keeps serving on `:8000` exactly as before, and you
    can reattach (repeat step 4) at any point without restarting anything.
 
-**Caveat:** breakpoints only resolve to visible source for files that exist
-in your local workspace at the same relative path the binary was built
-from — i.e. `modules/ortbvast/**`, via the `substitutePath` mapping in
-`launch.json`. Prebid Server's own core source (cloned into the container
-at build time, not present locally) isn't browsable this way; that's
-expected, since the only custom code here is in `modules/ortbvast/`.
+**Caveats:**
+
+- Breakpoints only resolve to visible source for files that exist in your
+  local workspace at the same relative path the binary was built from —
+  i.e. `modules/ortbvast/**`, via the `substitutePath` mapping in
+  `launch.json`. Prebid Server's own core source (cloned into the container
+  at build time, not present locally) isn't browsable this way; that's
+  expected, since the only custom code here is in `modules/ortbvast/`.
+- Delve needs the container running natively on your host's architecture;
+  breakpoints silently fail to fire under Rosetta emulation. See
+  `docs/RETROSPECTIVE-delve-debugging.md` for how that showed up and was
+  diagnosed.
+- Delve's own logs (RPC calls such as `CreateBreakpoint`) go to
+  `docker compose logs prebid-server`, not to VS Code — `showLog`/`logOutput`
+  in `launch.json` have no effect when attaching to a remote headless
+  server.
 
 **Back to normal:** `./stop.sh` works unchanged for the debug stack too
 (same container/service names). Switch back to the regular image with:
@@ -222,57 +198,54 @@ expected, since the only custom code here is in `modules/ortbvast/`.
 ./stop.sh && ./start.sh
 ```
 
-## Local editor tooling (VS Code): resolving `modules/ortbvast` imports
+## Local editor tooling: resolving `modules/ortbvast` imports
 
-`modules/ortbvast/{bouncer,enricher}` import `github.com/prebid/prebid-server/v4/...`,
-but the repo has no `go.mod` of its own — by design, since the Dockerfile
-vendors those two directories directly into a *fresh clone* of
-prebid-server's own module tree at build time (see `Dockerfile`), rather
-than treating them as a separate dependency. That's correct for the build,
-but it means an editor opened on this repo alone has no module context to
-resolve those imports against, and gopls (VS Code's Go language server)
-reports `BrokenImport` / `cannot find package ... in GOROOT` — it's fallen
-back to legacy GOPATH-style resolution, which only ever looks in the
-standard library.
+`modules/ortbvast/{bouncer,enricher}` import `github.com/prebid/prebid-server/v4/...`.
+The Dockerfile vendors those two directories directly into a *fresh clone*
+of prebid-server's own module tree at build time, so the build doesn't need
+anything else. For local editing, the repo root has its own `go.mod`
+`require`-ing prebid-server as an ordinary dependency, purely so gopls (VS
+Code's Go language server) and `go build`/`go vet` can resolve those
+imports.
 
-Fix: a `go.mod` at the repo root, `require`-ing prebid-server as an ordinary
-dependency purely for local tooling. **This must live at the repo root, not
-inside `modules/ortbvast/`** — a `go.mod` inside `modules/ortbvast/` would
-create a nested module boundary that breaks the Dockerfile's build (the
-codegen step that scans `./modules/...` would stop seeing those packages as
-part of prebid-server's module). The root `go.mod` is invisible to Docker
-either way, since the Dockerfile's `COPY modules/ortbvast ./modules/ortbvast`
-only ever copies that one subdirectory.
+**It must live at the repo root, not inside `modules/ortbvast/`** — a
+`go.mod` inside `modules/ortbvast/` would create a nested module boundary
+that breaks the Dockerfile's build (the codegen step that scans
+`./modules/...` would stop seeing those packages as part of prebid-server's
+module). The root `go.mod` is invisible to Docker, since the Dockerfile's
+`COPY modules/ortbvast ./modules/ortbvast` only copies that one
+subdirectory.
 
-One-time setup, from a terminal in the repo root (VS Code's own integrated
-terminal works — **Terminal → New Terminal**, or `` Ctrl+` ``):
+The first time you open a `.go` file, gopls downloads prebid-server's module
+graph (a large application with many transitive dependencies — a minute or
+two, cached under `~/go/pkg/mod` afterward). To check from a terminal:
 
 ```bash
-go mod tidy
+go build ./modules/... && go vet ./modules/...
 ```
-
-This downloads prebid-server's module graph (a large application with many
-transitive dependencies — expect it to take a minute or two the first time,
-cached under `~/go/pkg/mod` afterward) and writes `go.sum`. Once it
-finishes, reopen `modules/ortbvast/enricher/module.go` — the import errors
-should be gone. If they aren't, reload the window (`Cmd+Shift+P` →
-"Developer: Reload Window") to force gopls to pick up the new `go.mod`.
 
 If VS Code prompts "Some tools are missing" (gopls, dlv, etc.) the first
 time you open a `.go` file, click **Install All** — that's the Go
-extension's own local tooling, unrelated to the `go.mod` fix above, and
-only needs to happen once.
+extension's own local tooling, and only needs to happen once.
+
+**Optional: editable prebid-server source.** By default, "Go to Definition"
+on anything from `hookstage`/`moduledeps` opens a read-only copy in the
+module cache. To browse and edit a real checkout instead, clone
+prebid-server next to this repo and add a local `go.work` (gitignored)
+redirecting to it — see the comment at the top of `go.mod` for the exact
+contents.
 
 ## Running everything from VS Code
 
-With the Go import fix above and `.vscode/launch.json` / `.vscode/settings.json`
-in place (see the repo's `.vscode/` folder), both debugging paths run from
-one editor:
+With the repo's `.vscode/launch.json` and `.vscode/settings.json` in place,
+both debugging paths run from one editor:
 
-- **Python tests:** the **Testing** panel in the left sidebar (flask/beaker
-  icon) lists every `test_*` function once `python.testing.pytestEnabled`
-  picks them up — click the debug icon next to any test to run it under
-  VS Code's Python debugger, breakpoints and all, no PyCharm needed.
+- **Python tests:** `settings.json` points VS Code at `.venv/bin/python` and
+  enables pytest, so create the venv first
+  (`python3 -m venv .venv && .venv/bin/pip install -r tests/requirements.txt`).
+  The **Testing** panel in the left sidebar (flask/beaker icon) then lists
+  every `test_*` function — click the debug icon next to any test to run it
+  under VS Code's Python debugger, breakpoints and all.
 - **Go hooks:** start `./start-debug.sh`, then use the **Run and Debug**
   panel's "Attach to Bouncer/Enricher (Docker)" configuration exactly as
   described above.
@@ -283,7 +256,8 @@ breakpoint in `modules/ortbvast/bouncer/module.go`, then debug
 request it sends is what triggers the Go breakpoint. The two debug sessions
 are independent (switch between them via the dropdown next to the stop
 button in the floating debug toolbar); stopping one doesn't affect the
-other.
+other. Note the test uses a 10-second request timeout, so it will fail with
+a `ReadTimeout` if you stay paused on the Go breakpoint longer than that.
 
 ## Tear down
 

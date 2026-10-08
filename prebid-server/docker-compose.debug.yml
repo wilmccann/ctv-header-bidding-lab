@@ -9,14 +9,13 @@
 # Dockerfile builds the prebid-server image and publishes Delve's port.
 # Only one variant (normal or debug) can run at a time, since both bind the
 # same host ports/container name.
+#
+# The image must run natively on the host's architecture: Delve's
+# ptrace-based breakpoints are unreliable under Rosetta 2 emulation (see
+# docs/RETROSPECTIVE-delve-debugging.md). docker-compose.yml no longer pins a
+# platform for prebid-server, so no override is needed here.
 services:
   prebid-server:
-    # Override docker-compose.yml's linux/amd64 pin (needed there only for a
-    # prebuilt PBS image with no arm64 build). Dockerfile.debug compiles PBS
-    # from source, so it can run natively on arm64 — which it must, since
-    # Delve's ptrace-based breakpoints are unreliable against a process
-    # running under Rosetta 2 emulation on Apple Silicon.
-    platform: linux/arm64
     build:
       dockerfile: prebid-server/Dockerfile.debug
     ports:

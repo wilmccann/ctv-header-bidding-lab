@@ -1,43 +1,44 @@
 # Architecture: `ortb-vast` as an STV/CTV Exchange
 
-This document reviews where the repo stands today, explains how Prebid Server's
-exchange actually matches a Streaming TV (STV/CTV) bid request to demand
-partners, and lays out the changes needed to run this as a small multi-publisher
-hub: third-party STV publishers send OpenRTB in, multiple DSPs (including a
-first-party "house DSP" stand-in) compete for each impression, and a
-pre-auction filter/enrichment stage sits in front of the auction itself.
+This document explains how Prebid Server's exchange actually matches a
+Streaming TV (STV/CTV) bid request to demand partners, and how this repo
+models a small multi-publisher hub on top of it: third-party STV publishers
+send OpenRTB in, multiple DSPs (including a first-party "house DSP"
+stand-in) compete for each impression, and a pre-auction filter/enrichment
+stage sits in front of the auction itself.
 
 ---
 
-## 1. Current state
+## 1. What this repo is
 
-What's here today is a **stored-response test harness**, not an exchange:
+A local, fully mocked exchange built on a **custom-built Prebid Server
+v4.8.0**:
 
 ```
-docker-compose.yml → prebid/prebid-server:v4.8.0 (stock image), single container
-pbs.yaml           → account_required: false, gdpr default "0", no cache config
-stored_requests/   → stored_responses only, one seat ("flextechads"), one publisher
-examples/          → one CTV app (StreamVault/Roku), 3 imps, all wired to storedauctionresponse
+prebid-server/Dockerfile → PBS compiled from source with modules/ortbvast/ (Bouncer + Enricher) built in
+docker-compose.yml       → that image + a prebid-cache sidecar (in-memory backend)
+pbs.yaml                 → account_required: true, cache config, hooks execution plan
+stored_requests/         → one account per publisher; stored responses with 1–3 competing DSP seats
+examples/                → two STV publishers (FlexTechAds/Roku, CircuitTV/Samsung Tizen)
+tests/                   → pytest integration suite against the running stack
 ```
 
-Every bid in every fixture is canned JSON injected directly into the auction
-pipeline via PBS's `ext.prebid.storedauctionresponse` feature. That's a real,
-documented PBS capability — the request still goes through validation, GPP
-parsing, deal-vs-floor logic, targeting-key generation, and VAST assembly —
-but no bidder adapter is ever called, there's no concept of "publisher A vs.
-publisher B," and nothing inspects the request before the auction runs. It's
-good for asserting PBS's response-shaping behavior; it doesn't yet model a
-hub that ingests real 3rd-party traffic.
+Every bid is canned JSON injected into the auction pipeline via PBS's
+`ext.prebid.storedauctionresponse` feature. That's a real, documented PBS
+capability: the request still goes through account resolution, validation,
+GPP parsing, deal-vs-floor logic, targeting-key generation, VAST assembly,
+and caching. No bidder adapter is ever called, though, so this exercises
+PBS's request and response handling, not real DSP integrations.
 
-Gaps against the target scenario:
+Why each piece exists:
 
-| Gap | Why it matters |
+| Piece | Why it matters |
 |---|---|
-| Single publisher, `account_required: false` | A multi-publisher exchange is multi-tenant — each STV publisher needs its own account (floors, allowed demand, privacy defaults) isolated from the others |
-| Single mock seat | Doesn't demonstrate multiple DSPs (1st-party + 3rd-party) actually competing for the same impression |
-| No Prebid Cache | STV/CTV responses are typically too large for inline VAST in the ad response; real setups return a cache URL (`hb_cache_id`) instead |
-| No pre-auction filtering/enrichment | Nothing stands between "request hits PBS" and "auction runs" — no bot/fraud filtering, no identity decoration |
-| Stock PBS image | Any pre-auction logic beyond config (floors, GDPR, stored responses) requires a **custom-built** PBS binary — modules are compiled in, not dynamically loaded |
+| Per-publisher accounts, `account_required: true` | A multi-publisher exchange is multi-tenant: each STV publisher has its own account config (targeting prefix, cache TTL, debug policy) isolated from the others, and unknown publishers are rejected |
+| Multiple mock seats per impression | Demonstrates several DSPs (1st-party + 3rd-party) actually competing for the same impression |
+| Prebid Cache | STV/CTV responses are typically too large for inline VAST in the ad response; real setups return a cache URL (`hb_cache_id`) instead |
+| Pre-auction Bouncer + Enricher | Bot/fraud filtering and identity decoration between "request hits PBS" and "auction runs" |
+| Custom-built PBS image | Any pre-auction logic beyond config requires a **custom-built** PBS binary — modules are compiled in, not dynamically loaded |
 
 ---
 
@@ -121,7 +122,7 @@ differently in a video player than in a banner.
 
 ---
 
-## 3. Target architecture (multi-publisher exchange)
+## 3. Architecture (multi-publisher exchange)
 
 ```
                      ┌─────────────────────────────────────────────────────┐
@@ -185,10 +186,10 @@ into the binary, not dynamically loaded at runtime.** There's no plugin
 directory to drop a `.so` into. Adding a module means vendoring its code
 under `modules/<vendor>/<name>/module.go`, running the codegen that wires it
 into `modules/builder.go`, and building a custom PBS binary from source —
-which is why this repo now needs a custom Dockerfile instead of the stock
+which is why this repo uses a custom Dockerfile instead of the stock
 `prebid/prebid-server` image (see §5).
 
-### B. Security & bid filtering — the Bouncer
+### 4.1 Security & bid filtering — the Bouncer
 
 - **Stage:** `entrypoint` (fastest available hook point — pre-JSON-parse).
 - **Tech:** an in-process Bloom filter, seeded at startup from a configured
@@ -200,10 +201,11 @@ which is why this repo now needs a custom Dockerfile instead of the stock
   aggressive you want to be at the edge. It can never wrongly clear bad
   traffic, only occasionally block traffic it shouldn't (tunable via the
   filter's size/hash-count).
-- **What it does here:** checks the request's source IP (and, once parsed,
-  optionally `device.ifa`) against the filter; on a hit, the module sets
+- **What it does here:** checks the request's source IP (preferring
+  `X-Forwarded-For`) against the filter; on a hit, the module sets
   `HookResult.Reject = true` with an IAB no-bid reason code, short-circuiting
-  the request before it costs anything downstream.
+  the request before it costs anything downstream. PBS answers with HTTP 200
+  and an empty `BidResponse` carrying that code (`{"id": ..., "nbr": 2}`).
 - **Where real systems put this instead/also:** at very high scale, this
   same check often runs one layer earlier, at the CDN/load-balancer (e.g.
   Envoy + a WASM filter, or a dedicated edge service) so blocked traffic
@@ -212,7 +214,7 @@ which is why this repo now needs a custom Dockerfile instead of the stock
   unit — and is still a real production pattern, just not the only layer a
   large-scale exchange would use.
 
-### C. Identity matching & decoration — the Enricher
+### 4.2 Identity matching & decoration — the Enricher
 
 - **Stage:** `raw_auction_request` (parsed body available, before stored-request
   merge / bidder fan-out).
@@ -234,34 +236,30 @@ which is why this repo now needs a custom Dockerfile instead of the stock
   which is how the integration tests verify it actually ran, since none of
   the mock DSPs otherwise "consume" the enrichment.
 
-### A note on confidence
+### 4.3 PBS version compatibility
 
-The Go interfaces referenced here (`hookstage.Entrypoint`,
-`hookstage.RawAuctionRequest`, `HookResult[T]`, `ChangeSet[T]`) are from
-Prebid Server's documented Hooks framework and match what's published at
-`pkg.go.dev/github.com/prebid/prebid-server/v2/hooks/hookstage` and
-`docs.prebid.org/prebid-server/developers/add-a-module-go.html`. Exact field
-names can drift between PBS versions faster than docs are updated — **before
-running `docker compose build`, diff the vendored `hookstage` package in
-`go.mod`'s resolved version against what's used in `modules/ortbvast/*` and
-adjust field names if the compiler complains.** This is flagged explicitly
-rather than presented as verified-working, since the full module source
-wasn't fetchable during this session (GitHub raw fetches were blocked).
+The modules use Prebid Server's Hooks framework (`hookstage.Entrypoint`,
+`hookstage.RawAuctionRequest`, `HookResult[T]`, `ChangeSet[T]`) and are
+built and tested against **v4.8.0**. Hook payload types can change between
+PBS releases, so if you bump `PBS_VERSION`, a clean `docker compose build`
+plus a passing `pytest tests/` run is the confirmation that they still fit —
+see `prebid-server/README-build.md`, "Upgrading Prebid Server".
 
 ---
 
-## 5. What changes, concretely
+## 5. Where each piece lives
 
-| Area | Change |
+| Area | What's there |
 |---|---|
-| `prebid-server/Dockerfile` (new) | Multi-stage build: clone `prebid/prebid-server`, add `modules/ortbvast/{bouncer,enricher}`, `go generate`, build binary |
-| `prebid-server/docker-compose.yml` | Build the custom image instead of pulling `prebid/prebid-server:v4.8.0`; add `prebid-cache` service |
-| `prebid-server/pbs.yaml` | `account_required: true`; `hooks.enabled` + `host_execution_plan` wiring the two modules; `cache:` block pointing at the new service |
-| `prebid-server/stored_requests/data/by_id/accounts/*.json` (new) | One account per STV publisher (FlexTechAds, CircuitTV) with distinct floors/targeting defaults |
-| `prebid-server/stored_requests/data/by_id/stored_responses/*.json` | Extended so each imp carries 2–3 competing DSP seats instead of one |
-| `examples/*.json` (new) | A second publisher's request fixtures (different device/app) |
-| `tests/` (new) | pytest suite replacing/augmenting the manual curl recipes in `TESTING.md` |
+| `prebid-server/Dockerfile` | Multi-stage build: clone `prebid/prebid-server` at `PBS_VERSION`, add `modules/ortbvast/{bouncer,enricher}`, `go generate`, build binary |
+| `prebid-server/docker-compose.yml` | The custom PBS image plus a `prebid-cache` service |
+| `prebid-server/pbs.yaml` | `account_required: true` + `account_defaults.disabled: true`; `hooks` + `host_execution_plan` wiring the two modules; `cache:` block pointing at `prebid-cache` |
+| `prebid-server/stored_requests/data/by_id/accounts/*.json` | One account per STV publisher (FlexTechAds, CircuitTV) with distinct targeting prefix, cache TTL, and debug settings |
+| `prebid-server/stored_requests/data/by_id/stored_responses/*.json` | Canned seat bids; the multi-DSP fixtures carry 3 competing seats per imp |
+| `prebid-server/cache-config/` | Bouncer blocklist and Enricher profile store, loaded at startup |
+| `examples/*.json` | Request fixtures for both publishers, plus single-change variants (debug, floor, targeting) |
+| `tests/` | pytest suite automating the curl recipes in `TESTING.md` |
 
 See `TESTING.md` for how to exercise all of this once it's running, and
-`prebid-server/README-build.md` for the build/verification steps for the
+`prebid-server/README-build.md` for building, debugging, and upgrading the
 custom image.
